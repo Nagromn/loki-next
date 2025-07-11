@@ -1,28 +1,46 @@
-import { getTask } from "@/lib/api";
-import TaskDetail from "../../components/TaskDetail";
+import Link from "next/link";
 
 export async function generateMetadata({ params }) {
   const task = await getTask(params.id);
 
-  if (!task) {
-    return {
-      title: "Tâche introuvable",
-      description: "Cette tâche n'existe pas.",
-    };
-  }
-
   return {
-    title: `Tâche #${task.id}`,
-    description: `Détail de la tâche : ${task.title}`,
+    title: `Tâche ${task.id}`,
+    description: `Détails de la tâche ${task.title}`,
   };
 }
 
-export default async function TaskPage({ params }) {
+async function getTask(id) {
+  try {
+    const response = await fetch(
+      `https://jsonplaceholder.typicode.com/todos/${id}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch tasks");
+    }
+
+    const tasks = await response.json();
+    return tasks;
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    return null;
+  }
+}
+
+export default async function Task({ params }) {
   const task = await getTask(params.id);
 
   if (!task) {
-    return <div style={{ padding: "1rem" }}>Tâche introuvable.</div>;
+    return <div>Error loading tasks</div>;
   }
 
-  return <TaskDetail task={task} />;
+  return (
+    <main>
+      <h1>{task.title}</h1>
+      <p>Tâche terminée ? {task.completed ? "Oui" : "Non"}</p>
+      <Link href="/">
+        <button>Retour à la liste des tâches</button>
+      </Link>
+    </main>
+  );
 }
